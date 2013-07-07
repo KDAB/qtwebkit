@@ -21,7 +21,6 @@
 #include "config.h"
 #include "qwebframe.h"
 
-#include "QtPrintContext.h"
 #include "qwebelement.h"
 #include "qwebframe_p.h"
 #include "qwebpage.h"
@@ -36,6 +35,7 @@
 #include <qfileinfo.h>
 #include <qpainter.h>
 #if HAVE(QTPRINTSUPPORT)
+#include "QtPrintContext.h"
 #include <qprinter.h>
 #endif
 #include <qnetworkrequest.h>
@@ -912,9 +912,9 @@ void QWebFrame::print(QPrinter *printer) const
 
     \sa addToJavaScriptWindowObject(), javaScriptWindowObjectCleared()
 */
-QVariant QWebFrame::evaluateJavaScript(const QString& scriptSource)
+QVariant QWebFrame::evaluateJavaScript(const QString& scriptSource, const QString& location)
 {
-    return d->evaluateJavaScript(scriptSource);
+    return d->evaluateJavaScript(scriptSource, location);
 }
 
 /*!

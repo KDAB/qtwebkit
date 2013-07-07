@@ -50,6 +50,13 @@ public:
     {
     }
 
+    ScriptSourceCode(const String& source, const String& url, const TextPosition& startPosition = TextPosition::minimumPosition())
+        : m_provider(JSC::StringSourceProvider::create(source, url, startPosition))
+        , m_code(m_provider, startPosition.m_line.oneBasedInt(), startPosition.m_column.oneBasedInt())
+        , m_url(KURL(ParsedURLString, url))
+    {
+    }
+
     explicit ScriptSourceCode(CachedScript* cachedScript)
         : m_provider(CachedScriptSourceProvider::create(cachedScript))
         , m_code(m_provider)
