@@ -80,14 +80,16 @@ static void internalAddMessage(Page* page, MessageType type, MessageLevel level,
     const ScriptCallFrame& lastCaller = callStack->at(0);
 
     String message;
-    bool gotMessage = arguments->getFirstArgumentAsString(message);
+    for (unsigned i = 0; i < arguments->argumentCount(); ++i) {
+        message.append(arguments->argumentAt(i).toString(arguments->globalState()));
+        if (i < arguments->argumentCount() - 1)
+            message.append(' ');
+    }
+    page->chrome().client()->addMessageToConsole(ConsoleAPIMessageSource, type, level, message, lastCaller.lineNumber(), lastCaller.columnNumber(), lastCaller.sourceURL());
     InspectorInstrumentation::addMessageToConsole(page, ConsoleAPIMessageSource, type, level, message, state, arguments);
 
     if (page->settings()->privateBrowsingEnabled())
         return;
-
-    if (gotMessage)
-        page->chrome().client()->addMessageToConsole(ConsoleAPIMessageSource, type, level, message, lastCaller.lineNumber(), lastCaller.columnNumber(), lastCaller.sourceURL());
 
     if (!page->settings()->logsPageMessagesToSystemConsoleEnabled() && !PageConsole::shouldPrintExceptions())
         return;
