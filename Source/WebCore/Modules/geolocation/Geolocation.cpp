@@ -645,8 +645,12 @@ bool Geolocation::startUpdating(GeoNotifier* notifier)
     if (!page)
         return false;
 
-    GeolocationController::from(page)->addObserver(this, notifier->options()->enableHighAccuracy());
-    return true;
+    if (GeolocationController* controller = GeolocationController::from(page)) {
+        controller->addObserver(this, notifier->options()->enableHighAccuracy());
+        return true;
+    }
+
+    return false;
 }
 
 void Geolocation::stopUpdating()
@@ -655,7 +659,8 @@ void Geolocation::stopUpdating()
     if (!page)
         return;
 
-    GeolocationController::from(page)->removeObserver(this);
+    if (GeolocationController* controller = GeolocationController::from(page))
+        controller->removeObserver(this);
 }
 
 void Geolocation::handlePendingPermissionNotifiers()
