@@ -171,7 +171,12 @@ void PageConsole::addMessage(MessageSource source, MessageLevel level, const Str
     if (page->settings()->privateBrowsingEnabled())
         return;
 
-    page->chrome().client()->addMessageToConsole(source, level, message, lineNumber, columnNumber, url);
+    if (callStack) {
+        String stack = callStack->buildInspectorArray()->toJSONString();
+        page->chrome().client()->addMessageToConsole(source, level, message, lineNumber, columnNumber, url, stack);
+    } else {
+        page->chrome().client()->addMessageToConsole(source, level, message, lineNumber, columnNumber, url);
+    }
 
     if (!page->settings()->logsPageMessagesToSystemConsoleEnabled() && !shouldPrintExceptions())
         return;

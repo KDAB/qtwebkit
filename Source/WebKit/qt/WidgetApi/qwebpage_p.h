@@ -88,6 +88,8 @@ public:
     virtual void javaScriptAlert(QWebFrameAdapter*, const QString& msg) OVERRIDE;
     virtual bool javaScriptConfirm(QWebFrameAdapter*, const QString& msg) OVERRIDE;
     virtual bool javaScriptPrompt(QWebFrameAdapter*, const QString& msg, const QString& defaultValue, QString* result) OVERRIDE;
+    virtual void javaScriptError(const QString& message, int lineNumber, const QString& sourceID, const QString& stack) OVERRIDE;
+
     virtual bool shouldInterruptJavaScript() OVERRIDE;
     virtual void printRequested(QWebFrameAdapter*) OVERRIDE;
     virtual void databaseQuotaExceeded(QWebFrameAdapter*, const QString& databaseName) OVERRIDE;

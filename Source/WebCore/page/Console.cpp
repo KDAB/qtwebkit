@@ -85,7 +85,14 @@ static void internalAddMessage(Page* page, MessageType type, MessageLevel level,
         if (i < arguments->argumentCount() - 1)
             message.append(' ');
     }
-    page->chrome().client()->addMessageToConsole(ConsoleAPIMessageSource, type, level, message, lastCaller.lineNumber(), lastCaller.columnNumber(), lastCaller.sourceURL());
+
+    if (level == ErrorMessageLevel && callStack) {
+        String stack = callStack->buildInspectorArray()->toJSONString();
+        page->chrome().client()->addMessageToConsole(ConsoleAPIMessageSource, type, level, message, lastCaller.lineNumber(), lastCaller.columnNumber(), lastCaller.sourceURL(), stack);
+    } else {
+        page->chrome().client()->addMessageToConsole(ConsoleAPIMessageSource, type, level, message, lastCaller.lineNumber(), lastCaller.columnNumber(), lastCaller.sourceURL());
+    }
+
     InspectorInstrumentation::addMessageToConsole(page, ConsoleAPIMessageSource, type, level, message, state, arguments);
 
     if (page->settings()->privateBrowsingEnabled())
