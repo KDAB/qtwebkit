@@ -1574,7 +1574,7 @@ void QtConnectionObject::execute(void** argv)
 
     for (int i = 0; i < argc; i++) {
         int argType = method.parameterType(i);
-        args[i] = convertQVariantToValue(m_context, m_rootObject, QVariant(argType, argv[i+1]), ignoredException);
+        args[i] = convertQVariantToValue(m_context, m_rootObject.get(), QVariant(argType, argv[i+1]), ignoredException);
     }
 
     JSObjectCallAsFunction(m_context, m_receiverFunction, m_receiver, argc, args.data(), 0);
