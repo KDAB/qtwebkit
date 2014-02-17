@@ -507,6 +507,8 @@ String Frame::matchLabelsAgainstElement(const Vector<String>& labels, Element* e
 
 void Frame::setPrinting(bool printing, const FloatSize& pageSize, const FloatSize& originalPageSize, float maximumShrinkRatio, AdjustViewSizeOrNot shouldAdjustViewSize)
 {
+    m_pageResets.clear();
+
     // In setting printing, we should not validate resources already cached for the document.
     // See https://bugs.webkit.org/show_bug.cgi?id=43704
     ResourceCacheValidationSuppressor validationSuppressor(m_doc->cachedResourceLoader());
@@ -553,6 +555,38 @@ FloatSize Frame::resizePageRectsKeepingRatio(const FloatSize& originalSize, cons
         resultSize.setWidth(floorf(resultSize.height() * ratio));
     }
     return resultSize;
+}
+
+void Frame::addResetPage(int page)
+{
+    m_pageResets.append(page);
+}
+
+void Frame::getPagination(int page, int pages, int& logicalPage, int& logicalPages) const
+{
+    logicalPage = page;
+    logicalPages = pages;
+    int last_j = 0;
+    int j = 0;
+    for(size_t i = 0; i < m_pageResets.size(); ++i) {
+        j = m_pageResets.at(i);
+        if (j >= page) {
+            break;
+        }
+        last_j = j;
+    }
+    if (page > last_j) {
+        logicalPage = page - last_j;
+    }
+    if (last_j) {
+        if (j > last_j) {
+            logicalPages = j - last_j;
+        } else {
+            logicalPages = pages - last_j;
+        }
+    } else if (j >= page && j < pages) {
+        logicalPages = j;
+    }
 }
 
 void Frame::injectUserScripts(UserScriptInjectionTime injectionTime)

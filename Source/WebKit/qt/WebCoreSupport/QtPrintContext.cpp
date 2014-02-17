@@ -55,4 +55,22 @@ void QtPrintContext::spoolPage(int pageNumber, float width)
     m_printContext->spoolPage(*m_graphicsContext, pageNumber, width);
 }
 
+void QtPrintContext::getPagination(int page, int& logicalPage, int& logicalPages)
+{
+    m_printContext->frame()->getPagination(page, m_printContext->pageCount(), logicalPage, logicalPages);
+}
 
+void QtPrintContext::paintHeaderFooter(WebCore::Frame* frame, int offset, const QRect& pageRect, int height)
+{
+    m_graphicsContext->translate(0, offset);
+
+    PrintContext printCtx(frame);
+    printCtx.begin(pageRect.width(), height);
+
+    float tempHeight;
+    printCtx.computePageRects(IntRect(pageRect), /* headerHeight */ 0, /* footerHeight */ 0, /* userScaleFactor */ 1.0, tempHeight);
+
+    printCtx.spoolPage(*m_graphicsContext, 0, pageRect.width());
+
+    m_graphicsContext->translate(0, -offset);
+}

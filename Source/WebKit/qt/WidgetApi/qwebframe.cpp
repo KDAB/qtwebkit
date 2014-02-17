@@ -37,6 +37,7 @@
 #if HAVE(QTPRINTSUPPORT)
 #include "QtPrintContext.h"
 #include <qprinter.h>
+#include "qwebframe_printingaddons_p.h"
 #endif
 #include <qnetworkrequest.h>
 #include <qregion.h>
@@ -825,10 +826,18 @@ bool QWebFrame::event(QEvent *e)
 */
 void QWebFrame::print(QPrinter *printer) const
 {
+    print(printer, 0);
+}
+
+void QWebFrame::print(QPrinter *printer, PrintCallback *callback) const
+{
 #if HAVE(QTPRINTSUPPORT)
     QPainter painter;
+
     if (!painter.begin(printer))
         return;
+
+    HeaderFooter headerFooter(printer, callback);
 
     const qreal zoomFactorX = (qreal)printer->logicalDpiX() / qt_defaultDpi();
     const qreal zoomFactorY = (qreal)printer->logicalDpiY() / qt_defaultDpi();
@@ -883,6 +892,7 @@ void QWebFrame::print(QPrinter *printer) const
                     || printer->printerState() == QPrinter::Error) {
                     return;
                 }
+                headerFooter.paint(page, pageRect, &printContext);
                 printContext.spoolPage(page - 1, pageRect.width());
                 if (j < pageCopies - 1)
                     printer->newPage();

@@ -28,6 +28,7 @@
 namespace WebCore {
 class PrintContext;
 class GraphicsContext;
+class Frame;
 }
 
 class QWebFrameAdapter;
@@ -39,6 +40,9 @@ public:
 
     int pageCount() const;
     void spoolPage(int pageNumber, float width);
+
+    void getPagination(int page, int& logicalPage, int& logicalPages);
+    void paintHeaderFooter(WebCore::Frame* frame, int offset, const QRect& pageRect, int height);
 
 private:
     WebCore::GraphicsContext* m_graphicsContext;
