@@ -1900,7 +1900,7 @@ void RenderBlock::layoutRunsAndFloatsInRange(LineLayoutState& layoutState, Inlin
                 if (layoutState.usesRepaintBounds())
                     layoutState.updateRepaintRangeFromBox(lineBox);
 
-                if (paginated) {
+                if (paginated && !isTableCell()) {
                     LayoutUnit adjustment = 0;
                     adjustLinePositionForPagination(lineBox, adjustment, layoutState.flowThread());
                     if (adjustment) {
