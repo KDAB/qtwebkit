@@ -41,7 +41,7 @@
 
 #include <QCoreApplication>
 
-static const int gMaxRedirections = 10;
+static const int gMaxRedirections = 20;
 
 namespace WebCore {
 
