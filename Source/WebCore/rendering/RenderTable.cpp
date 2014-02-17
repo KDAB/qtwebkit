@@ -431,14 +431,22 @@ void RenderTable::layout()
         oldTableLogicalTop += m_captions[i]->logicalHeight() + m_captions[i]->marginBefore() + m_captions[i]->marginAfter();
 
     bool collapsing = collapseBorders();
-
+    // repeat header and footer on each page
+    int headHeight = 0;
+    int footHeight = 0;
     for (RenderObject* child = firstChild(); child; child = child->nextSibling()) {
         if (child->isTableSection()) {
             RenderTableSection* section = toRenderTableSection(child);
             if (m_columnLogicalWidthChanged)
                 section->setChildNeedsLayout(true, MarkOnlyThis);
             section->layoutIfNeeded();
-            totalSectionLogicalHeight += section->calcRowLogicalHeight();
+            int rowHeight = section->calcRowLogicalHeight();
+            if (child == m_head) {
+                headHeight = rowHeight;
+            } else if (child == m_foot) {
+                footHeight = rowHeight;
+            }
+            totalSectionLogicalHeight += rowHeight;
             if (collapsing)
                 section->recalcOuterBorder();
             ASSERT(!section->needsLayout());
@@ -496,7 +504,7 @@ void RenderTable::layout()
     distributeExtraLogicalHeight(floorToInt(computedLogicalHeight - totalSectionLogicalHeight));
 
     for (RenderTableSection* section = topSection(); section; section = sectionBelow(section))
-        section->layoutRows();
+        section->layoutRows(headHeight, footHeight);
 
     if (!topSection() && computedLogicalHeight > totalSectionLogicalHeight && !document()->inQuirksMode()) {
         // Completely empty tables (with no sections or anything) should at least honor specified height
