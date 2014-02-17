@@ -834,10 +834,10 @@ void QWebFrame::print(QPrinter *printer, PrintCallback *callback) const
 #if HAVE(QTPRINTSUPPORT)
     QPainter painter;
 
+    HeaderFooter headerFooter(printer, callback);
+
     if (!painter.begin(printer))
         return;
-
-    HeaderFooter headerFooter(printer, callback);
 
     const qreal zoomFactorX = (qreal)printer->logicalDpiX() / qt_defaultDpi();
     const qreal zoomFactorY = (qreal)printer->logicalDpiY() / qt_defaultDpi();
