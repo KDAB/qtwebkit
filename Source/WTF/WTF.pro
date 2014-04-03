@@ -256,6 +256,7 @@ win*|wince*: SOURCES += \
     ThreadingWin.cpp
 
 win32 {
+    HEADERS += config.h
     SOURCES += \
         threads/win/BinarySemaphoreWin.cpp
     INCLUDEPATH += $$PWD/wtf/threads
