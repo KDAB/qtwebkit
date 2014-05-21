@@ -121,7 +121,11 @@ enable?(XSLT) {
         QT *= xmlpatterns
     }
 } else:!mac:use?(LIBXML2) {
-    PKGCONFIG += libxml-2.0
+    win32-msvc* {
+        LIBS += -llibxml2
+    } else {
+        PKGCONFIG += libxml-2.0
+    }
 }
 
 use?(ZLIB) {
