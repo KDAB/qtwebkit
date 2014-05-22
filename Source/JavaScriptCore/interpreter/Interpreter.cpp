@@ -604,10 +604,12 @@ String StackFrame::toString(CallFrame* callFrame)
     StringBuilder traceBuild;
     String functionName = friendlyFunctionName(callFrame);
     String sourceURL = friendlySourceURL();
-    traceBuild.append(functionName);
+    traceBuild.append("\tat ");
     if (!sourceURL.isEmpty()) {
-        if (!functionName.isEmpty())
-            traceBuild.append('@');
+        if (!functionName.isEmpty()) {
+            traceBuild.append(functionName);
+            traceBuild.append(" (");
+        }
         traceBuild.append(sourceURL);
         if (codeType != StackFrameNativeCode) {
             unsigned line;
@@ -618,6 +620,9 @@ String StackFrame::toString(CallFrame* callFrame)
             traceBuild.appendNumber(line);
             traceBuild.append(':');
             traceBuild.appendNumber(column);
+        }
+        if (!functionName.isEmpty()) {
+            traceBuild.append(")");
         }
     }
     return traceBuild.toString().impl();
@@ -660,6 +665,18 @@ void Interpreter::getStackTrace(VM* vm, Vector<StackFrame>& results, size_t maxS
     }
 }
 
+JSString* Interpreter:: stackTraceAsString(ExecState* exec, Vector<StackFrame> stackTrace)
+{
+    // FIXME: JSStringJoiner could be more efficient than StringBuilder here.
+    StringBuilder builder;
+    for (unsigned i = 0; i < stackTrace.size(); i++) {
+        builder.append(String(stackTrace[i].toString(exec)));
+        if (i != stackTrace.size() - 1)
+            builder.append('\n');
+    }
+    return jsString(&exec->vm(), builder.toString());
+}
+
 void Interpreter::addStackTraceIfNecessary(CallFrame* callFrame, JSValue error)
 {
     VM* vm = &callFrame->vm();
@@ -676,22 +693,7 @@ void Interpreter::addStackTraceIfNecessary(CallFrame* callFrame, JSValue error)
     if (stackTrace.isEmpty() || !error.isObject())
         return;
 
-    JSObject* errorObject = asObject(error);
-    JSGlobalObject* globalObject = 0;
-    if (isTerminatedExecutionException(error))
-        globalObject = vm->dynamicGlobalObject;
-    else
-        globalObject = errorObject->globalObject();
-
-    // FIXME: JSStringJoiner could be more efficient than StringBuilder here.
-    StringBuilder builder;
-    for (unsigned i = 0; i < stackTrace.size(); i++) {
-        builder.append(String(stackTrace[i].toString(globalObject->globalExec()).impl()));
-        if (i != stackTrace.size() - 1)
-            builder.append('\n');
-    }
-
-    errorObject->putDirect(*vm, vm->propertyNames->stack, jsString(vm, builder.toString()), ReadOnly | DontDelete);
+    asObject(error)->putDirect(*vm, vm->propertyNames->stack, vm->interpreter->stackTraceAsString(vm->topCallFrame, stackTrace), ReadOnly | DontDelete);
 }
 
 NEVER_INLINE HandlerInfo* Interpreter::throwException(CallFrame*& callFrame, JSValue& exceptionValue, unsigned bytecodeOffset)
