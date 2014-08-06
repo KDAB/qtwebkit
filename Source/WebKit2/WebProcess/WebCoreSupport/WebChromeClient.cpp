@@ -287,7 +287,7 @@ void WebChromeClient::setResizable(bool resizable)
     m_page->send(Messages::WebPageProxy::SetIsResizable(resizable));
 }
 
-void WebChromeClient::addMessageToConsole(MessageSource, MessageLevel, const String& message, unsigned lineNumber, unsigned /*columnNumber*/, const String& /*sourceID*/)
+void WebChromeClient::addMessageToConsole(MessageSource, MessageLevel, const String& message, unsigned lineNumber, unsigned /*columnNumber*/, const String& /*sourceID*/, const String& /*stack*/)
 {
     // Notify the bundle client.
     m_page->injectedBundleUIClient().willAddMessageToConsole(m_page, message, lineNumber);
