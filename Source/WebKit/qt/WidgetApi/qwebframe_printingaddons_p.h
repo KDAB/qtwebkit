@@ -27,7 +27,6 @@
 #include <qprinter.h>
 #include <qstring.h>
 
-#include "GraphicsContext.h"
 #include "QtPrintContext.h"
 
 // for custom header or footers in printing
