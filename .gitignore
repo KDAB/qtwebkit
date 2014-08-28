@@ -24,4 +24,10 @@ Source/JavaScriptCore/release/
 Source/WTF/release/
 Source/WebCore/release/
 Source/WebKit/release/
+Source/ThirdParty/leveldb/release
+Source/JavaScriptCore/debug/
+Source/WTF/debug/
+Source/WebCore/debug/
+Source/WebKit/debug/
+Source/ThirdParty/leveldb/debug
 config.log
