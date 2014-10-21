@@ -670,7 +670,57 @@ void RenderTable::paintObject(PaintInfo& paintInfo, const LayoutPoint& paintOffs
             child->paint(info, childPoint);
         }
     }
-    
+
+    LayoutPoint headerPoint;
+    LayoutPoint footerPoint;
+
+    if (view()->printing()) {
+        // re-paint header/footer if table is split over multiple pages
+        if (m_head) {
+            LayoutPoint childPoint = flipForWritingModeForChild(m_head, paintOffset);
+            if (!info.rect.contains(childPoint.x() + m_head->x(), childPoint.y() + m_head->y())) {
+                headerPoint = LayoutPoint(childPoint.x(), info.rect.y() - m_head->y());
+                static_cast<RenderObject*>(m_head)->paint(info, headerPoint);
+            }
+        }
+        if (m_foot) {
+            LayoutPoint childPoint = flipForWritingModeForChild(m_foot, paintOffset);
+            if (!info.rect.contains(childPoint.x() + m_foot->x(), childPoint.y() + m_foot->y())) {
+                // find actual end of table on current page
+                int dy = 0;
+                const int max_dy = info.rect.y() + info.rect.height();
+                const int vspace = vBorderSpacing();
+                for (RenderObject* section = firstChild(); section; section = section->nextSibling()) {
+                    if (section->isTableSection()) {
+                        if (toRenderBox(section)->y() > max_dy) {
+                            continue;
+                        }
+                        int i = 0;
+                        for(RenderObject* row = section->firstChild(); row; row = row->nextSibling()) {
+                            if (!row->isTableRow()) {
+                                continue;
+                            }
+                            // get actual bottom-y position of this row - pretty complicated, how could this be simplified?
+                            // note how we have to take the rowPoint and section's y-offset into account, see e.g.
+                            // RenderTableSection::paint where this is also done...
+                            RenderBox* rowBox = toRenderBox(row);
+                            LayoutPoint rowPoint = flipForWritingModeForChild(rowBox, paintOffset);
+                            int row_dy = rowPoint.y() + rowBox->y() + rowBox->logicalHeight() + toRenderBox(section)->y();
+                            if (row_dy < max_dy && row_dy > dy) {
+                                dy = row_dy;
+                            } else if (row_dy > max_dy) {
+                                break;
+                            }
+                            i++;
+                        }
+                    }
+                }
+                footerPoint = LayoutPoint(childPoint.x(), dy - m_foot->y());
+                static_cast<RenderObject*>(m_foot)->paint(info, footerPoint);
+            }
+        }
+    }
+
     if (collapseBorders() && paintPhase == PaintPhaseChildBlockBackground && style()->visibility() == VISIBLE) {
         recalcCollapsedBorders();
         // Using our cached sorted styles, we then do individual passes,
@@ -679,9 +729,15 @@ void RenderTable::paintObject(PaintInfo& paintInfo, const LayoutPoint& paintOffs
         size_t count = m_collapsedBorders.size();
         for (size_t i = 0; i < count; ++i) {
             m_currentBorder = &m_collapsedBorders[i];
+            if (view()->printing() && footerPoint != LayoutPoint::zero()) {
+                static_cast<RenderObject*>(m_foot)->paint(info, footerPoint);
+            }
             for (RenderTableSection* section = bottomSection(); section; section = sectionAbove(section)) {
                 LayoutPoint childPoint = flipForWritingModeForChild(section, paintOffset);
                 section->paint(info, childPoint);
+            }
+            if (view()->printing() && headerPoint != LayoutPoint::zero()) {
+                static_cast<RenderObject*>(m_head)->paint(info, headerPoint);
             }
         }
         m_currentBorder = 0;
