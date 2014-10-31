@@ -77,8 +77,8 @@ public:
 
     void addCell(RenderTableCell*, RenderTableRow* row);
 
-    int calcRowLogicalHeight();
-    void layoutRows(int headHeight, int footHeight);
+    int calcRowLogicalHeight(int headHeight, int footHeight);
+    void layoutRows();
     void computeOverflowFromCells();
 
     RenderTable* table() const { return toRenderTable(parent()); }
@@ -249,6 +249,7 @@ private:
 
     Vector<RowStruct> m_grid;
     Vector<int> m_rowPos;
+    Vector<int> m_rowHeightForPrinting;
 
     // the current insertion position
     unsigned m_cCol;

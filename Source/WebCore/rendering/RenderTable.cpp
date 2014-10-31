@@ -50,6 +50,16 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
+namespace {
+
+bool hasClass(RenderObject* item, const char* className)
+{
+    StyledElement* elem = dynamic_cast<StyledElement*>(item->generatingNode());
+    return elem && elem->hasClass() && elem->classNames().contains(className);
+}
+
+}
+
 RenderTable::RenderTable(Element* element)
     : RenderBlock(element)
     , m_head(0)
@@ -434,17 +444,20 @@ void RenderTable::layout()
     // repeat header and footer on each page
     int headHeight = 0;
     int footHeight = 0;
+    const bool canRepeatHeadFoot = view()->layoutState()->isPaginated() && hasClass(this, "phantomjs_print_table");
     for (RenderObject* child = firstChild(); child; child = child->nextSibling()) {
         if (child->isTableSection()) {
             RenderTableSection* section = toRenderTableSection(child);
             if (m_columnLogicalWidthChanged)
                 section->setChildNeedsLayout(true, MarkOnlyThis);
             section->layoutIfNeeded();
-            int rowHeight = section->calcRowLogicalHeight();
-            if (child == m_head) {
-                headHeight = rowHeight;
-            } else if (child == m_foot) {
-                footHeight = rowHeight;
+            int rowHeight = section->calcRowLogicalHeight(headHeight, footHeight);
+            if (canRepeatHeadFoot && (child == m_head || child == m_foot) && hasClass(child, "phantomjs_print_repeat")) {
+                if (child == m_head) {
+                    headHeight = rowHeight;
+                } else if (child == m_foot) {
+                    footHeight = rowHeight;
+                }
             }
             totalSectionLogicalHeight += rowHeight;
             if (collapsing)
@@ -504,7 +517,7 @@ void RenderTable::layout()
     distributeExtraLogicalHeight(floorToInt(computedLogicalHeight - totalSectionLogicalHeight));
 
     for (RenderTableSection* section = topSection(); section; section = sectionBelow(section))
-        section->layoutRows(headHeight, footHeight);
+        section->layoutRows();
 
     if (!topSection() && computedLogicalHeight > totalSectionLogicalHeight && !document()->inQuirksMode()) {
         // Completely empty tables (with no sections or anything) should at least honor specified height
@@ -676,14 +689,14 @@ void RenderTable::paintObject(PaintInfo& paintInfo, const LayoutPoint& paintOffs
 
     if (view()->printing()) {
         // re-paint header/footer if table is split over multiple pages
-        if (m_head) {
+        if (m_head && hasClass(m_head, "phantomjs_print_repeat") && hasClass(this, "phantomjs_print_table")) {
             LayoutPoint childPoint = flipForWritingModeForChild(m_head, paintOffset);
             if (!info.rect.contains(childPoint.x() + m_head->x(), childPoint.y() + m_head->y())) {
                 headerPoint = LayoutPoint(childPoint.x(), info.rect.y() - m_head->y());
                 static_cast<RenderObject*>(m_head)->paint(info, headerPoint);
             }
         }
-        if (m_foot) {
+        if (m_foot && hasClass(m_foot, "phantomjs_print_repeat") && hasClass(this, "phantomjs_print_table")) {
             LayoutPoint childPoint = flipForWritingModeForChild(m_foot, paintOffset);
             if (!info.rect.contains(childPoint.x() + m_foot->x(), childPoint.y() + m_foot->y())) {
                 // find actual end of table on current page
